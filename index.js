@@ -17,7 +17,7 @@ app.use(bodyParser.json())
 app.use(cors())
 
 // Define your route
-app.post('/stripe-app-oparav', async (req, res) => {
+app.post('/create-checkout-session', async (req, res) => {
   const { amount } = req.body
   console.log(req.body.amount)
 
