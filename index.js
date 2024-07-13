@@ -23,7 +23,7 @@ app.post('/create-checkout-session', async (req, res) => {
 
   try {
     if (!amount || typeof amount !== 'number') {
-      throw new Error('Amount must be provided and must be a number.')
+      throw new Error('Amout must be provided and must be a number.')
     }
 
     const unitAmount = amount * 100
@@ -43,7 +43,7 @@ app.post('/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: 'https://your-app-name.herokuapp.com/success', // Replace with your Heroku app URL
+      success_url: 'https://your-app-name.herokuapp.com/success', // Replace  your Heroku app URL
       cancel_url: 'https://your-app-name.herokuapp.com/cancel', // Replace with your Heroku app URL
     })
 
