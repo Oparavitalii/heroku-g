@@ -43,8 +43,8 @@ app.post('/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: 'http://localhost:3000/success',
-      cancel_url: 'http://localhost:3000/cancel',
+      success_url: 'https://your-app-name.herokuapp.com/success', // Replace with your Heroku app URL
+      cancel_url: 'https://your-app-name.herokuapp.com/cancel', // Replace with your Heroku app URL
     })
 
     res.json({ id: session.id })
@@ -53,6 +53,7 @@ app.post('/create-checkout-session', async (req, res) => {
   }
 })
 
-app.listen(4242, () => {
-  console.log('Server running on port 4242')
+const PORT = process.env.PORT || 4242
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
 })
