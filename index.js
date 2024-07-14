@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Configure CORS middleware
 const corsOptions = {
-  origin: "https://oparavitalii.space/take2eu", // Update with your frontend URL
+  origin: "https://oparavitalii.space", // Update with your frontend URL
   optionsSuccessStatus: 200,
 };
 
