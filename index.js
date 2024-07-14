@@ -1,59 +1,66 @@
-import express from 'express'
-import Stripe from 'stripe'
-import bodyParser from 'body-parser'
-import cors from 'cors' // Import cors middleware
-import dotenv from 'dotenv'
+import express from "express";
+import Stripe from "stripe";
+import bodyParser from "body-parser";
+import cors from "cors";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
-const app = express()
+const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2020-08-27',
-})
+  apiVersion: "2020-08-27",
+});
 
-app.use(bodyParser.json())
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Configure CORS middleware
-app.use(cors())
+const corsOptions = {
+  origin: "https://oparavitalii.space/take2eu", // Update with your frontend URL
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 
 // Define your route
-app.post('/create-checkout-session', async (req, res) => {
-  const { amount } = req.body
-  console.log(req.body.amount)
+app.post("/create-checkout-session", async (req, res) => {
+  const { amount } = req.body;
+  console.log(req.body); // For debugging
 
   try {
-    if (!amount || typeof amount !== 'number') {
-      throw new Error('Amout must be provided and must be a number.')
+    if (!amount || typeof amount !== "number") {
+      throw new Error("Amount must be provided and must be a number.");
     }
 
-    const unitAmount = amount * 100
+    const unitAmount = amount * 100;
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
-            currency: 'eur',
+            currency: "eur",
             product_data: {
-              name: 'Your Product Name',
+              name: "Your Product Name",
             },
             unit_amount: unitAmount,
           },
           quantity: 1,
         },
       ],
-      mode: 'payment',
-      success_url: 'https://your-app-name.herokuapp.com/success', // Replace  your Heroku app URL
-      cancel_url: 'https://your-app-name.herokuapp.com/cancel', // Replace with your Heroku app URL
-    })
+      mode: "payment",
+      success_url: "https://oparavitalii.space/take2eu/success", // Replace with your actual URL
+      cancel_url: "https://oparavitalii.space/take2eu/cancel", // Replace with your actual URL
+    });
 
-    res.json({ id: session.id })
+    res.json({ id: session.id });
   } catch (error) {
-    res.status(500).send({ error: error.message })
+    console.error("Error creating checkout session:", error);
+    res.status(500).send({ error: error.message });
   }
-})
+});
 
-const PORT = process.env.PORT || 4242
+const PORT = process.env.PORT || 4242;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+  console.log(`Server running on port ${PORT}`);
+});
