@@ -49,8 +49,8 @@ app.post("/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: "https://oparavitalii.space/take2eu/success", // Replace with your actual URL
-      cancel_url: "https://oparavitalii.space/take2eu/cancel", // Replace with your actual URL
+      success_url: "https://oparavitalii.space/take2eu/#/success", // Replace with your actual URL
+      cancel_url: "https://oparavitalii.space/take2eu/#/cancel", // Replace with your actual URL
     });
 
     res.json({ id: session.id });
