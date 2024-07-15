@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Configure CORS middleware
 const corsOptions = {
-  origin: "https://oparavitalii.space", // Update with your frontend URL
+  origin: "https://take2eu.com", // Update with your frontend URL
   optionsSuccessStatus: 200,
 };
 
@@ -49,8 +49,8 @@ app.post("/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: "https://oparavitalii.space/take2eu/#/succes", // Replace with your actual URL
-      cancel_url: "https://oparavitalii.space/take2eu/#/cancel", // Replace with your actual URL
+      success_url: "https://take2eu.com/#/succes", // Replace with your actual URL
+      cancel_url: "https://take2eu.com/#/cancel", // Replace with your actual URL
     });
 
     res.json({ id: session.id });
