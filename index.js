@@ -49,7 +49,7 @@ app.post("/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: "https://take2eu.com/#/succes", // Replace with your actual URL
+      success_url: "https://take2eu.com/#/anketa", // Replace with your actual URL
       cancel_url: "https://take2eu.com/#/cancel", // Replace with your actual URL
     });
 
