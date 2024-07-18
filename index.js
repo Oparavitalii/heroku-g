@@ -14,8 +14,8 @@ const upload = multer();
 
 // CORS configuration
 const corsOptions = {
-  origin: "https://take2eu.com", // Update with your frontend URL
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  origin: "http://localhost:3000", // Update with your frontend URL
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
@@ -52,7 +52,7 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
             product_data: {
               name: "Form Submission",
             },
-            unit_amount: amount * 100, // Convert amount to the smallest currency unit
+            unit_amount: amount * 100,
           },
           quantity: 1,
         },
@@ -85,12 +85,6 @@ app.post(
       if (event.type === "checkout.session.completed") {
         const session = event.data.object;
         const formData = session.metadata;
-        // Handle the formData and files here
-        console.log("Form data:", formData);
-
-        // Example of handling files - make sure these are being sent in the right format
-        // const cv = req.files.find((file) => file.fieldname === "cv");
-        // const certificates = req.files.find((file) => file.fieldname === "certificates");
 
         // Send confirmation email
         const mailOptions = {
@@ -98,22 +92,13 @@ app.post(
           to: formData.email,
           subject: "Form Submission Received",
           text: `Thank you for your submission, ${formData.firstName} ${formData.lastName}!`,
-          // Example of handling attachments - ensure correct format
           attachments: [
             {
               filename: "submission.pdf",
               content: formData.pdfBase64,
               encoding: "base64",
             },
-            // cv && {
-            //   filename: cv.originalname,
-            //   content: cv.buffer,
-            // },
-            // certificates && {
-            //   filename: certificates.originalname,
-            //   content: certificates.buffer,
-            // },
-          ].filter(Boolean),
+          ],
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
