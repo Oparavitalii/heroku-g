@@ -46,8 +46,8 @@ app.post(
 
         // Send confirmation email
         const mailOptions = {
-          from: process.env.GMAIL_USER,
-          to: formData.email,
+          from: "take2europe@gmail.com",
+          to: "take2europe@gmail.com",
           subject: "Form Submission Received",
           text: `Thank you for your submission, ${formData.firstName} ${formData.lastName}!`,
           attachments: [
