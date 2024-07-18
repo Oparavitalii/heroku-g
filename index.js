@@ -79,7 +79,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Nodemailer setup
 
-
 // Stripe configuration
 const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -107,7 +106,7 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: "https://take2eu.com/#/success",
+      success_url: "https://take2eu.com/#/succes",
       cancel_url: "https://take2eu.com/#/cancel",
     });
 
@@ -118,7 +117,6 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
 });
 
 // Route to handle Stripe webhook events
-
 
 // Test route to verify CORS setup
 app.get("/test-cors", (req, res) => {
