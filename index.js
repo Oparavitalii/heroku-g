@@ -35,7 +35,7 @@ const transporter = nodemailer.createTransport({
 const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
 
 // Route to create a Stripe checkout session
-app.post("/create-checkout-session", upload.any(), async (req, res) => {
+app.post("/form", upload.any(), async (req, res) => {
   const { amount } = req.body;
 
   if (!amount) {
