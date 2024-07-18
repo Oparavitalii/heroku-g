@@ -84,7 +84,17 @@ const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
 
 // Route to create a Stripe checkout session
 app.post("/create-checkout-session", upload.any(), async (req, res) => {
-  const { amount } = req.body;
+  const {
+    amount,
+    firstName,
+    lastName,
+    email,
+    phone,
+    position,
+    aboutYourself,
+    plan,
+    pdfBase64,
+  } = req.body;
 
   if (!amount) {
     return res.status(400).json({ error: "Amount is required" });
@@ -116,7 +126,7 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
         position,
         aboutYourself,
         plan,
-        pdfBase64, // Include pdfBase64 if necessary
+        pdfBase64,
       },
     });
 
