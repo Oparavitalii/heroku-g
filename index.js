@@ -49,7 +49,7 @@ app.post(
           from: "take2europe@gmail.com",
           to: "take2europe@gmail.com",
           subject: "Form Submission Received",
-          text: `Thank you for your submission, ${formData.firstName} ${formData.lastName}!`,
+          text: `Thank you for your submission, ${formData.firstName} ${formData.lastName}${formData.amount}!`,
           attachments: [
             {
               filename: "submission.pdf",
@@ -115,7 +115,9 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
           quantity: 1,
         },
       ],
-      metadata: {},
+      metadata: {
+        amount
+      },
       mode: "payment",
       success_url: "https://take2eu.com/#/succes",
       cancel_url: "https://take2eu.com/#/cancel",
