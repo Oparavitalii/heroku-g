@@ -35,7 +35,7 @@ const transporter = nodemailer.createTransport({
 const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
 
 // Route to create a Stripe checkout session
-app.post("/form", upload.any(), async (req, res) => {
+app.post("/create-checkout-session", upload.any(), async (req, res) => {
   const { amount } = req.body;
 
   if (!amount) {
@@ -70,7 +70,7 @@ app.post("/form", upload.any(), async (req, res) => {
 
 // Route to handle Stripe webhook events
 app.post(
-  "http://localhost:4242/create-form",
+  "/form",
   bodyParser.raw({ type: "application/json" }), // Ensure raw body parser is used for webhooks
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
