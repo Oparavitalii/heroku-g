@@ -18,11 +18,6 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
-app.use(cors(corsOptions));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Nodemailer setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -31,44 +26,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Stripe configuration
-const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
-
-// Route to create a Stripe checkout session
-app.post("/create-checkout-session", upload.any(), async (req, res) => {
-  const { amount } = req.body;
-
-  if (!amount) {
-    return res.status(400).json({ error: "Amount is required" });
-  }
-
-  try {
-    const session = await stripeConfig.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: "Form Submission",
-            },
-            unit_amount: amount * 100,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: "https://take2eu.com/#/success",
-      cancel_url: "https://take2eu.com/#/cancel",
-    });
-
-    res.json({ sessionId: session.id });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Route to handle Stripe webhook events
+app.use(cors(corsOptions));
 app.post(
   "/form",
   bodyParser.raw({ type: "application/json" }), // Ensure raw body parser is used for webhooks
@@ -116,6 +74,51 @@ app.post(
     }
   }
 );
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Nodemailer setup
+
+
+// Stripe configuration
+const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
+
+// Route to create a Stripe checkout session
+app.post("/create-checkout-session", upload.any(), async (req, res) => {
+  const { amount } = req.body;
+
+  if (!amount) {
+    return res.status(400).json({ error: "Amount is required" });
+  }
+
+  try {
+    const session = await stripeConfig.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: "Form Submission",
+            },
+            unit_amount: amount * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: "https://take2eu.com/#/success",
+      cancel_url: "https://take2eu.com/#/cancel",
+    });
+
+    res.json({ sessionId: session.id });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Route to handle Stripe webhook events
+
 
 // Test route to verify CORS setup
 app.get("/test-cors", (req, res) => {
