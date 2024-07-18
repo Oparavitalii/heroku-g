@@ -14,7 +14,7 @@ const upload = multer();
 
 // CORS configuration
 const corsOptions = {
-  origin: "http://localhost:3000", // Update with your frontend URL
+  origin: "https://take2eu.com", // Update with your frontend URL
   optionsSuccessStatus: 200,
 };
 
@@ -48,7 +48,7 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "eur",
             product_data: {
               name: "Form Submission",
             },
