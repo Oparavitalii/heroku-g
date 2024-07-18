@@ -115,10 +115,10 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
           quantity: 1,
         },
       ],
+      metadata: {},
       mode: "payment",
       success_url: "https://take2eu.com/#/succes",
       cancel_url: "https://take2eu.com/#/cancel",
-     
     });
 
     res.json({ sessionId: session.id });
