@@ -14,7 +14,7 @@ const upload = multer();
 
 // CORS configuration
 const corsOptions = {
-  origin: "http://localhost:3000", // Update with your frontend URL
+  origin: "https://take2eu.com", // Update with your frontend URL
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
