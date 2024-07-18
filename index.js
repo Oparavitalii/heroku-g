@@ -66,7 +66,7 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
 
 // Route to handle Stripe webhook events
 app.post(
-  "/webhook",
+  "/create-form",
   bodyParser.raw({ type: "application/json" }),
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
