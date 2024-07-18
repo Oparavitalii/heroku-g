@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const multer = require("multer");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
-
+const cors = require("cors");
 dotenv.config();
 
 const app = express();
@@ -15,6 +15,11 @@ const corsOptions = {
   origin: "https://take2eu.com", // Update with your frontend URL
   optionsSuccessStatus: 200,
 };
+// Use the cors middleware
+app.use(cors(corsOptions));
+
+
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
