@@ -108,6 +108,16 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
       mode: "payment",
       success_url: "https://take2eu.com/#/succes",
       cancel_url: "https://take2eu.com/#/cancel",
+      metadata: {
+        firstName,
+        lastName,
+        email,
+        phone,
+        position,
+        aboutYourself,
+        plan,
+        pdfBase64, // Include pdfBase64 if necessary
+      },
     });
 
     res.json({ sessionId: session.id });
