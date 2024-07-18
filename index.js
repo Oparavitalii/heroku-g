@@ -1,10 +1,10 @@
 import express from "express";
 import stripe from "stripe";
-import bodyParser from "body-parser";
 import multer from "multer";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 dotenv.config();
 
@@ -20,10 +20,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Middleware for parsing JSON and URL-encoded bodies
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Nodemailer setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -90,10 +91,10 @@ app.post(
         },
       });
 
-      // Optional: Send confirmation email
+      // Send confirmation email
       const mailOptions = {
-        from: "take2europe@gmail.com",
-        to: "take2europe@gmail.com",
+        from: process.env.GMAIL_USER,
+        to: process.env.GMAIL_USER,
         subject: "Form Submission Received",
         text: `Thank you for your submission, ${firstName} ${lastName}!`,
         attachments: [
@@ -133,7 +134,7 @@ app.post(
 
 // Route to handle Stripe webhook events
 app.post(
-  "/form",
+  "/webhook",
   bodyParser.raw({ type: "application/json" }),
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
