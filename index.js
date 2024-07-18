@@ -37,7 +37,7 @@ const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
 // Route to create a Stripe checkout session
 app.post("/create-checkout-session", upload.any(), async (req, res) => {
   const { amount } = req.body;
-
+console,log(amount);
   try {
     const session = await stripeConfig.checkout.sessions.create({
       payment_method_types: ["card"],
