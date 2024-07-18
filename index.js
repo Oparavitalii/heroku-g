@@ -29,51 +29,56 @@ const transporter = nodemailer.createTransport({
 app.use(cors(corsOptions));
 app.post(
   "/form",
-  bodyParser.raw({ type: "application/json" }), // Ensure raw body parser is used for webhooks
-  async (req, res) => {
-    const sig = req.headers["stripe-signature"];
+  bodyParser.raw({ type: "application/json" }),
+  (request, response) => {
+    const sig = request.headers["stripe-signature"];
+    let event;
 
     try {
-      const event = stripeConfig.webhooks.constructEvent(
-        req.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object;
-        const formData = session.metadata;
-
-        // Send confirmation email
-        const mailOptions = {
-          from: "take2europe@gmail.com",
-          to: "take2europe@gmail.com",
-          subject: "Form Submission Received",
-          text: `Thank you for your submission, ${formData.firstName} ${formData.lastName}${formData.amount}!`,
-          attachments: [
-            {
-              filename: "submission.pdf",
-              content: formData.pdfBase64,
-              encoding: "base64",
-            },
-          ],
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error("Error sending email:", error);
-          } else {
-            console.log("Email sent:", info.response);
-          }
-        });
-      }
-
-      res.status(200).send("Received webhook");
+      event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
     } catch (err) {
-      res.status(400).send(`Webhook Error: ${err.message}`);
+      response.status(400).send(`Webhook Error: ${err.message}`);
+      return;
     }
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+      const metadata = session.metadata;
+
+      sendEmail(metadata);
+    }
+
+    response.json({ received: true });
   }
 );
+
+const sendEmail = async (metadata) => {
+  const formDataToSend = new FormData();
+  formDataToSend.append("pdfBase64", metadata.pdfBase64);
+  formDataToSend.append("firstName", metadata.firstName);
+  formDataToSend.append("lastName", metadata.lastName);
+  formDataToSend.append("email", metadata.email);
+  formDataToSend.append("phone", metadata.phone);
+  formDataToSend.append("position", metadata.position);
+  formDataToSend.append("aboutYourself", metadata.aboutYourself);
+  formDataToSend.append("plan", metadata.plan);
+
+  try {
+    const response = await axios.post(
+      "https://take2eu.com/send.php",
+      formDataToSend,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    console.log("Email sent successfully!", response.data);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+};
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -124,6 +129,7 @@ app.post("/create-checkout-session", upload.any(), async (req, res) => {
         position,
         aboutYourself,
         plan,
+        pdfBase64,
       },
       mode: "payment",
       success_url: "https://take2eu.com/#/succes",
