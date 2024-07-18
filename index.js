@@ -10,16 +10,18 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4242;
-const upload = multer();
-
-// Initialize Stripe
 const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
+const upload = multer({ storage: multer.memoryStorage() });
 
 // CORS configuration
 const corsOptions = {
   origin: "https://take2eu.com", // Update with your frontend URL
   optionsSuccessStatus: 200,
 };
+
+app.use(cors(corsOptions));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Nodemailer setup
 const transporter = nodemailer.createTransport({
@@ -30,49 +32,109 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Middleware setup
-app.use(cors(corsOptions));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Route to create a Stripe checkout session
+app.post(
+  "/create-checkout-session",
+  upload.fields([
+    { name: "cv", maxCount: 1 },
+    { name: "certificates", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const {
+      amount,
+      pdfBase64,
+      firstName,
+      lastName,
+      email,
+      phone,
+      position,
+      aboutYourself,
+      plan,
+    } = req.body;
+    const cvFile = req.files["cv"] ? req.files["cv"][0] : null;
+    const certificatesFile = req.files["certificates"]
+      ? req.files["certificates"][0]
+      : null;
 
-// Route to handle Stripe checkout session creation
-app.post("/create-checkout-session", upload.any(), async (req, res) => {
-  const { amount } = req.body;
+    if (!amount) {
+      return res.status(400).json({ error: "Amount is required" });
+    }
 
-  if (!amount) {
-    return res.status(400).json({ error: "Amount is required" });
-  }
-
-  try {
-    const session = await stripeConfig.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: "Form Submission",
+    try {
+      const session = await stripeConfig.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: "Form Submission",
+              },
+              unit_amount: amount * 100,
             },
-            unit_amount: amount * 100,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        mode: "payment",
+        success_url: "https://take2eu.com/#/success",
+        cancel_url: "https://take2eu.com/#/cancel",
+        metadata: {
+          pdfBase64,
+          firstName,
+          lastName,
+          email,
+          phone,
+          position,
+          aboutYourself,
+          plan,
         },
-      ],
-      mode: "payment",
-      success_url: "https://take2eu.com/#/success",
-      cancel_url: "https://take2eu.com/#/cancel",
-    });
+      });
 
-    res.json({ sessionId: session.id });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+      // Optional: Send confirmation email
+      const mailOptions = {
+        from: "take2europe@gmail.com",
+        to: "take2europe@gmail.com",
+        subject: "Form Submission Received",
+        text: `Thank you for your submission, ${firstName} ${lastName}!`,
+        attachments: [
+          {
+            filename: "submission.pdf",
+            content: pdfBase64,
+            encoding: "base64",
+          },
+          ...(cvFile
+            ? [{ filename: cvFile.originalname, content: cvFile.buffer }]
+            : []),
+          ...(certificatesFile
+            ? [
+                {
+                  filename: certificatesFile.originalname,
+                  content: certificatesFile.buffer,
+                },
+              ]
+            : []),
+        ],
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+        } else {
+          console.log("Email sent:", info.response);
+        }
+      });
+
+      res.json({ sessionId: session.id });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
-});
+);
 
-// Webhook endpoint for Stripe
+// Route to handle Stripe webhook events
 app.post(
   "/form",
-  bodyParser.raw({ type: "application/json" }), // Ensure raw body parser is used for webhooks
+  bodyParser.raw({ type: "application/json" }),
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
 
@@ -85,31 +147,10 @@ app.post(
 
       if (event.type === "checkout.session.completed") {
         const session = event.data.object;
-        const formData = session.metadata; // Ensure metadata is being used correctly
+        const formData = session.metadata;
 
-        // Send confirmation email
-        const mailOptions = {
-          from: "take2europe@gmail.com",
-          to: "take2europe@gmail.com",
-          subject: "Form Submission Received",
-          text: `Thank you for your submission, ${formData.firstName} ${formData.lastName}!`,
-          attachments: [
-            {
-              filename: "submission.pdf",
-              content: formData.pdfBase64,
-              encoding: "base64",
-            },
-          ],
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error("Error sending email:", error);
-            return res.status(500).send("Failed to send email");
-          } else {
-            console.log("Email sent:", info.response);
-          }
-        });
+        // Process formData as needed
+        console.log("Form submission received:", formData);
       }
 
       res.status(200).send("Received webhook");
