@@ -9,12 +9,12 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4242;
 const upload = multer();
 
 // CORS configuration
 const corsOptions = {
-  origin: "https://take2eu.com", // Update with your frontend URL
+  origin: "http://localhost:3000", // Update with your frontend URL
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
@@ -37,7 +37,11 @@ const stripeConfig = stripe(process.env.STRIPE_SECRET_KEY);
 // Route to create a Stripe checkout session
 app.post("/create-checkout-session", upload.any(), async (req, res) => {
   const { amount } = req.body;
-console.log(amount);
+
+  if (!amount) {
+    return res.status(400).json({ error: "Amount is required" });
+  }
+
   try {
     const session = await stripeConfig.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -48,7 +52,7 @@ console.log(amount);
             product_data: {
               name: "Form Submission",
             },
-            unit_amount: amount * 100,
+            unit_amount: amount * 100, // Convert amount to the smallest currency unit
           },
           quantity: 1,
         },
@@ -60,14 +64,14 @@ console.log(amount);
 
     res.json({ sessionId: session.id });
   } catch (error) {
-    res.status(500).send({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
 // Route to handle Stripe webhook events
 app.post(
-  "/create-form",
-  bodyParser.raw({ type: "application/json" }),
+  "http://localhost:4242/create-form",
+  bodyParser.raw({ type: "application/json" }), // Ensure raw body parser is used for webhooks
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
 
@@ -81,31 +85,35 @@ app.post(
       if (event.type === "checkout.session.completed") {
         const session = event.data.object;
         const formData = session.metadata;
-        const cv = req.files.find((file) => file.fieldname === "cv");
-        const certificates = req.files.find(
-          (file) => file.fieldname === "certificates"
-        );
+        // Handle the formData and files here
+        console.log("Form data:", formData);
 
+        // Example of handling files - make sure these are being sent in the right format
+        // const cv = req.files.find((file) => file.fieldname === "cv");
+        // const certificates = req.files.find((file) => file.fieldname === "certificates");
+
+        // Send confirmation email
         const mailOptions = {
           from: process.env.GMAIL_USER,
           to: formData.email,
           subject: "Form Submission Received",
           text: `Thank you for your submission, ${formData.firstName} ${formData.lastName}!`,
+          // Example of handling attachments - ensure correct format
           attachments: [
             {
               filename: "submission.pdf",
               content: formData.pdfBase64,
               encoding: "base64",
             },
-            {
-              filename: cv.originalname,
-              content: cv.buffer,
-            },
-            {
-              filename: certificates.originalname,
-              content: certificates.buffer,
-            },
-          ],
+            // cv && {
+            //   filename: cv.originalname,
+            //   content: cv.buffer,
+            // },
+            // certificates && {
+            //   filename: certificates.originalname,
+            //   content: certificates.buffer,
+            // },
+          ].filter(Boolean),
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -116,11 +124,11 @@ app.post(
           }
         });
       }
+
+      res.status(200).send("Received webhook");
     } catch (err) {
       res.status(400).send(`Webhook Error: ${err.message}`);
     }
-
-    res.status(200).send("Received webhook");
   }
 );
 
